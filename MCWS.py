@@ -10,12 +10,13 @@ f = open('./scrapedData/' + 'moviesDVD' + date + '.json', 'w')
 titlesList = []
 scoreList = []
 mainList = []
+linkList = []
 
 i = 0
 
 # array of the entire alphabet
 # alphabet = list(string.ascii_lowercase)
-
+alphabet = ['a']
 # base url to be scraped
 url = 'https://www.metacritic.com/browse/movies/title/dvd'
 
@@ -25,8 +26,9 @@ def printMessage(message, url):
 def findTitles(): # scrape titles
     titles = soup.select('td.title_wrapper div.title a')
     for title in titles:
+        linkList.append('https://www.metacritic.com' + title.get('href'))
         titlesList.append(title.text)
-    return titlesList
+
 
 def findScores(): # scrape scores
     scores = soup.select('a.metascore_anchor div.metascore_w.large.movie')
@@ -35,7 +37,13 @@ def findScores(): # scrape scores
     return scoreList
 
 def findDetails():
-    details = soup.select('tr.details_row div.details_section')
+    userScores = soup.select('tr.details_row div.details_section div.userscore_text span')[1::2]
+    for userScore in userScores:
+        userScoreList.append(userScore.text.strip())
+
+    return userScoreList
+
+
 
 while url:
     headers = {'User-Agent':'Mozilla/5.0'}
@@ -45,6 +53,7 @@ while url:
 
     findScores()
     findTitles()
+
 
     if url:
         url = 'https://www.metacritic.com' + url[0].get('href')
@@ -57,7 +66,7 @@ while url:
             print('Finished scraping. Have a nice day')
             break
 
-mainList = [{'title': title, 'score': score} for title, score in zip(titlesList, scoreList)]
+mainList = [{'title': title, 'score': score, 'link': link} for title, score, link in zip(titlesList, scoreList, linkList)]
 
 f.write(json.dumps(mainList))
 f.close()
